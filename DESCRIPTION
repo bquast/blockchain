@@ -1,0 +1,8 @@
+Package: blockchain
+Title: implements blockchain functionality in R
+Version: 0.0.0.9000
+Authors@R: person("Bastiaan", "Quast", email = "bquast@gmail.com", role = c("aut", "cre"))
+Description: functions for building blockchains in R
+Depends: R (>= 3.4.3)
+License: GPL-3
+Encoding: UTF-8
