@@ -25,8 +25,9 @@ output_dim = 1
 # choose a hidden_dim
 hidden_dim = 4
 
-library(abind)
 library(digest)
+
+chain <- vector("list", n+1)
 
 # initialize weights randomly between -1 and 1, with mean 0
 weights_0 = matrix(runif(n = input_dim * output_dim,
@@ -41,31 +42,19 @@ weights_1 = matrix(runif(n = hidden_dim * output_dim,
                    nrow = hidden_dim,
                    ncol = output_dim)
 
-weights_0_list <- vector("list", n+1)
-weights_1_list <- vector("list", n+1)
-
-weights_0_list[[1]] <- weights_0
-weights_1_list[[1]] <- weights_1
-
-block = blockchain( length(blockchain) )
-
-digest(block,algo="sha256")
-
-newblock = list(
-  index = length (blockchain) + 1,
-  timestamp = as.numeric(Sys.time()) ,
-  prevHash = ,
-  weights_0,
-  weights_1
-)
-
-
+# initiate chain
+chain[[1]] <- list(prevHash = digest(0,algo="sha256"),
+                   index = 1,
+                   time=Sys.time(),
+                   weights_0 = weights_0,
+                   weights_1 = weights_1,
+                   Y = NULL)
 
 for (j in 1:n) {
   # Feed forward through layers 0, 1, and 2
   layer_0 = X[j, , drop = FALSE]
-  layer_1 = sigmoid( layer_0 %*% weights_0_list[[j]] )
-  layer_2 = sigmoid( layer_1 %*% weights_1_list[[j]] )
+  layer_1 = sigmoid( layer_0 %*% chain[[j]][[4]] )
+  layer_2 = sigmoid( layer_1 %*% chain[[j]][[5]] )
   # how much did we miss the target value?
   layer_2_error = Y[j] - layer_2
   if (j %% 10000 == 0)
@@ -85,6 +74,10 @@ for (j in 1:n) {
   weights_0 = weights_0 + t(layer_0) %*% layer_1_delta
 
   # add to chain
-  weights_0_list[[j+1]] = weights_0
-  weights_1_list[[j+1]] = weights_1
+  chain[[j+1]] <- list(prevHash = digest(chain[[j]],algo="sha256"),
+                       index = j+1,
+                       time = Sys.time(),
+                       weights_0 = weights_0,
+                       weights_1 = weights_1,
+                       Y[j])
 }
