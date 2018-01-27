@@ -41,8 +41,11 @@ weights_1 = matrix(runif(n = hidden_dim * output_dim,
                    nrow = hidden_dim,
                    ncol = output_dim)
 
-weights_0_array <- abind(weights_0, weights_0, along=3)
-weights_1_array <- abind(weights_1, weights_1, along=3)
+weights_0_list <- vector("list", n+1)
+weights_1_list <- vector("list", n+1)
+
+weights_0_list[[1]] <- weights_0
+weights_1_list[[1]] <- weights_1
 
 block = blockchain( length(blockchain) )
 
@@ -61,8 +64,8 @@ newblock = list(
 for (j in 1:n) {
   # Feed forward through layers 0, 1, and 2
   layer_0 = X[j, , drop = FALSE]
-  layer_1 = sigmoid( layer_0 %*% weights_0_array[,,dim(weights_0_array)[3]] )
-  layer_2 = sigmoid( layer_1 %*% weights_1_array[,,dim(weights_1_array)[3]] )
+  layer_1 = sigmoid( layer_0 %*% weights_0_list[[j]] )
+  layer_2 = sigmoid( layer_1 %*% weights_1_list[[j]] )
   # how much did we miss the target value?
   layer_2_error = Y[j] - layer_2
   if (j %% 10000 == 0)
@@ -82,6 +85,6 @@ for (j in 1:n) {
   weights_0 = weights_0 + t(layer_0) %*% layer_1_delta
 
   # add to chain
-  weights_0_array = abind(weights_0_array, weights_0, along=3)
-  weights_1_array = abind(weights_1_array, weights_1, along=3)
+  weights_0_list[[j+1]] = weights_0
+  weights_1_list[[j+1]] = weights_1
 }
